@@ -10,13 +10,13 @@
 # Member 4 passes in `current_student` as a dict from the auth layer.
 
 import sys
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QFrame, QSizePolicy, QMessageBox,
+    QLabel, QPushButton, QFrame, QMessageBox,
     QScrollArea
 )
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QFont
 
 from controllers.team_controller import TeamController
 from views.team_form import TeamFormView
@@ -24,7 +24,7 @@ from views.available_projects_view import AvailableProjectsView
 
 
 # ---------------------------------------------------------------------------
-# Shared colour palette (used across all my views)
+# Shared colour palette
 # ---------------------------------------------------------------------------
 PRIMARY_COLOR   = "#1A3C6E"
 ACCENT_COLOR    = "#2E7D32"
@@ -32,14 +32,11 @@ LIGHT_BG        = "#F4F6F8"
 CARD_BG         = "#FFFFFF"
 TEXT_PRIMARY    = "#1C1C1E"
 TEXT_SECONDARY  = "#6B7280"
-DANGER_COLOR    = "#C62828"
-SUCCESS_COLOR   = "#2E7D32"
 BORDER_COLOR    = "#E0E0E0"
 
 
 def make_label(text: str, font_size: int = 11, bold: bool = False,
                color: str = TEXT_PRIMARY) -> QLabel:
-    """Small helper to quickly create a styled QLabel."""
     lbl = QLabel(text)
     font = QFont("Segoe UI", font_size)
     font.setBold(bold)
@@ -49,25 +46,10 @@ def make_label(text: str, font_size: int = 11, bold: bool = False,
 
 
 class StudentDashboard(QWidget):
-    """
-    The main dashboard for a logged-in student.
-
-    Parameters:
-        current_student : dict — keys: student_id, name, email, program, gpa
-                                  (provided by Member 4's auth system)
-        parent          : QWidget or None
-    """
-
     def __init__(self, current_student: dict, parent=None):
         super().__init__(parent)
         self.current_student = current_student
-
-        # One controller for the dashboard's lifetime.  Sub-windows
-        # (team form, projects view) create their own — that's fine,
-        # SQLite handles multiple connections to the same file.
         self.controller = TeamController()
-
-        # Keep references so PyQt doesn't garbage-collect the sub-windows
         self.team_form_window = None
         self.projects_window  = None
 
@@ -76,32 +58,22 @@ class StudentDashboard(QWidget):
         self.setStyleSheet(f"background-color: {LIGHT_BG};")
 
         self._build_ui()
-        self._load_team_status()  # populate the team section on startup
-
-    # ------------------------------------------------------------------
-    # Close-event override — make sure we release the DB connection
-    # ------------------------------------------------------------------
+        self._load_team_status()
 
     def closeEvent(self, event):
         self.controller.close()
         super().closeEvent(event)
-
-    # ------------------------------------------------------------------
-    # UI Construction
-    # ------------------------------------------------------------------
 
     def _build_ui(self):
         root_layout = QVBoxLayout(self)
         root_layout.setContentsMargins(0, 0, 0, 0)
         root_layout.setSpacing(0)
 
-        # Top navy banner
         root_layout.addWidget(self._build_header())
 
-        # Scrollable content area
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
         scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
 
         content_widget = QWidget()
@@ -128,14 +100,14 @@ class StudentDashboard(QWidget):
         h_layout.setContentsMargins(30, 0, 30, 0)
 
         title = QLabel("🎓  ECE Graduation Project Registration System")
-        title.setFont(QFont("Segoe UI", 14, QFont.Bold))
+        title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
         title.setStyleSheet("color: white;")
 
         name = self.current_student.get("name", "Student")
         greeting = QLabel(f"Welcome,  {name}")
         greeting.setFont(QFont("Segoe UI", 11))
         greeting.setStyleSheet("color: rgba(255,255,255,0.85);")
-        greeting.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        greeting.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 
         h_layout.addWidget(title)
         h_layout.addStretch()
@@ -143,7 +115,6 @@ class StudentDashboard(QWidget):
         return header
 
     def _build_info_card(self) -> QFrame:
-        """A card that shows the student's basic academic info."""
         card = QFrame()
         card.setStyleSheet(
             f"""
@@ -201,7 +172,6 @@ class StudentDashboard(QWidget):
         layout.addWidget(make_label("My Team", 13, bold=True, color=PRIMARY_COLOR))
         layout.addWidget(self._divider())
 
-        # _load_team_status() fills the rest of this card dynamically
         self.team_status_layout = layout
         return card
 
@@ -228,19 +198,10 @@ class StudentDashboard(QWidget):
         layout.addStretch()
         return container
 
-    # ------------------------------------------------------------------
-    # Dynamic: team status card content
-    # ------------------------------------------------------------------
-
     def _load_team_status(self):
-        """
-        Looks up the student's team via the controller and rebuilds the
-        team status card based on whether they're in a team or not.
-        """
         student_id = self.current_student.get("student_id")
         team_info  = self.controller.get_team_of_student(student_id) if student_id else None
 
-        # Clear previous content (keep the title + divider at index 0 and 1)
         while self.team_status_layout.count() > 2:
             item = self.team_status_layout.takeAt(2)
             if item is None:
@@ -249,30 +210,19 @@ class StudentDashboard(QWidget):
             if w is not None:
                 w.deleteLater()
             else:
-                # It's a layout — recursively clear it
                 self._clear_layout(item.layout())
 
         if team_info is None:
-            # Not in a team yet
-            no_team_lbl = make_label(
-                "You are not currently in a team.",
-                11, color=TEXT_SECONDARY
-            )
-            no_team_lbl.setAlignment(Qt.AlignCenter)
+            no_team_lbl = make_label("You are not currently in a team.", 11, color=TEXT_SECONDARY)
+            no_team_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.team_status_layout.addWidget(no_team_lbl)
 
-            hint = make_label(
-                "Use the 'Create a Team' button below to get started.",
-                10, color=ACCENT_COLOR
-            )
-            hint.setAlignment(Qt.AlignCenter)
+            hint = make_label("Use the 'Create a Team' button below to get started.", 10, color=ACCENT_COLOR)
+            hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.team_status_layout.addWidget(hint)
 
             self.btn_create_team.setEnabled(True)
-            self.btn_create_team.setToolTip("Form a new team of 3 students")
-
         else:
-            # Already in a team — show team details
             team_id   = team_info["team_id"]
             team_name = team_info["team_name"]
             members   = self.controller.get_team_members(team_id)
@@ -280,7 +230,6 @@ class StudentDashboard(QWidget):
             self.team_status_layout.addWidget(
                 make_label(f"Team Name:  {team_name}", 12, bold=True, color=PRIMARY_COLOR)
             )
-
             self.team_status_layout.addWidget(
                 make_label("Members:", 10, color=TEXT_SECONDARY)
             )
@@ -288,18 +237,14 @@ class StudentDashboard(QWidget):
             for m in members:
                 m_row = QHBoxLayout()
                 m_row.addWidget(make_label(f"  • {m.get('name', '?')}", 11))
-                m_row.addWidget(make_label(f"({m.get('student_id', '?')})",
-                                            10, color=TEXT_SECONDARY))
-                m_row.addWidget(make_label(f"— {m.get('program', '?')}",
-                                            10, color=TEXT_SECONDARY))
+                m_row.addWidget(make_label(f"({m.get('student_id', '?')})", 10, color=TEXT_SECONDARY))
+                m_row.addWidget(make_label(f"— {m.get('program', '?')}", 10, color=TEXT_SECONDARY))
                 m_row.addStretch()
                 self.team_status_layout.addLayout(m_row)
 
             self.btn_create_team.setEnabled(False)
-            self.btn_create_team.setToolTip("You are already in a team.")
 
     def _clear_layout(self, layout):
-        """Helper to recursively delete a sub-layout's widgets."""
         if layout is None:
             return
         while layout.count():
@@ -310,10 +255,6 @@ class StudentDashboard(QWidget):
             elif item.layout() is not None:
                 self._clear_layout(item.layout())
 
-    # ------------------------------------------------------------------
-    # Button actions
-    # ------------------------------------------------------------------
-
     def _open_team_form(self):
         self.team_form_window = TeamFormView(
             current_student=self.current_student,
@@ -322,21 +263,16 @@ class StudentDashboard(QWidget):
         self.team_form_window.show()
 
     def _on_team_created(self):
-        """Called by TeamFormView after a successful team creation."""
-        self._load_team_status()  # refresh
+        self._load_team_status()
 
     def _open_available_projects(self):
         specialization = self.current_student.get("program")
         self.projects_window = AvailableProjectsView(specialization=specialization)
         self.projects_window.show()
 
-    # ------------------------------------------------------------------
-    # Utility widget builders
-    # ------------------------------------------------------------------
-
     def _divider(self) -> QFrame:
         line = QFrame()
-        line.setFrameShape(QFrame.HLine)
+        line.setFrameShape(QFrame.Shape.HLine)
         line.setStyleSheet(f"color: {BORDER_COLOR};")
         return line
 
@@ -345,9 +281,9 @@ class StudentDashboard(QWidget):
         btn = QPushButton(text)
         btn.setFixedHeight(42)
         btn.setMinimumWidth(200)
-        btn.setFont(QFont("Segoe UI", 10, QFont.Bold if primary else QFont.Normal))
+        btn.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold if primary else QFont.Weight.Normal))
         btn.setToolTip(tooltip)
-        btn.setCursor(Qt.PointingHandCursor)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
 
         if primary:
             btn.setStyleSheet(
@@ -383,21 +319,15 @@ class StudentDashboard(QWidget):
         return btn
 
 
-# ---------------------------------------------------------------------------
-# Standalone test — pretend a student is already logged in.
-# Member 4 will replace this with real auth output.
-# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-
     test_student = {
-        "student_id": "S001",          # Must exist in the DB for testing
+        "student_id": "S001",
         "name":       "Test Student",
         "email":      "test@test.edu",
         "program":    "Computer",
         "gpa":        3.75,
     }
-
     dashboard = StudentDashboard(current_student=test_student)
     dashboard.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
