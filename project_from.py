@@ -1,60 +1,92 @@
 # ==========================================
 # Project Form View
 # ==========================================
-
-import tkinter as tk
-from tkinter import messagebox
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QLabel, QLineEdit,
+    QPushButton, QMessageBox
+)
+from PyQt6.QtCore import Qt
 from controllers.project_controller import ProjectController
 
-class ProjectFormWindow:
-    def __init__(self, root, project_to_edit=None, refresh_callback=None):
-        self.root = root
-        self.project_to_edit = project_to_edit
+
+class ProjectFormWindow(QWidget):
+    def __init__(self, db, project_to_edit=None, refresh_callback=None):
+        super().__init__()
+        self.project_to_edit  = project_to_edit
         self.refresh_callback = refresh_callback
-        self.controller = ProjectController()
-        
+        self.controller       = ProjectController(db)
+
+        self.setWindowTitle("Edit Project" if project_to_edit else "Add New Project")
+        self.setFixedSize(450, 380)
+        self._build_ui()
+
+        # Fill fields if editing
         if self.project_to_edit:
-            self.root.title("Edit Project")
-        else:
-            self.root.title("Add New Project")
-        self.root.geometry("400x350")
+            self.entry_title.setText(project_to_edit.get("title", ""))
+            self.entry_description.setText(project_to_edit.get("description", ""))
+            self.entry_faculty.setText(project_to_edit.get("supervisor", ""))
+            self.entry_specialization.setText(project_to_edit.get("specialization", ""))
 
-        tk.Label(root, text="Project Title:", font=("Arial", 10)).pack(pady=5)
-        self.entry_title = tk.Entry(root, width=40)
-        self.entry_title.pack(pady=5)
+    def _build_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(24, 20, 24, 20)
+        layout.setSpacing(10)
 
-        tk.Label(root, text="Project Description:", font=("Arial", 10)).pack(pady=5)
-        self.entry_description = tk.Entry(root, width=40)
-        self.entry_description.pack(pady=5)
+        # Title
+        layout.addWidget(QLabel("Project Title:"))
+        self.entry_title = QLineEdit()
+        self.entry_title.setPlaceholderText("Enter project title")
+        layout.addWidget(self.entry_title)
 
-        tk.Label(root, text="Faculty Member ID:", font=("Arial", 10)).pack(pady=5)
-        self.entry_faculty = tk.Entry(root, width=40)
-        self.entry_faculty.pack(pady=5)
+        # Description
+        layout.addWidget(QLabel("Project Description:"))
+        self.entry_description = QLineEdit()
+        self.entry_description.setPlaceholderText("Enter project description")
+        layout.addWidget(self.entry_description)
 
-        self.btn_save = tk.Button(root, text="Save Project", font=("Arial", 11, "bold"), bg="green", fg="white", command=self.save_data)
-        self.btn_save.pack(pady=20)
+        # Faculty Member
+        layout.addWidget(QLabel("Faculty Member ID:"))
+        self.entry_faculty = QLineEdit()
+        self.entry_faculty.setPlaceholderText("Enter faculty ID")
+        layout.addWidget(self.entry_faculty)
+
+        # Specialization
+        layout.addWidget(QLabel("Specialization:"))
+        self.entry_specialization = QLineEdit()
+        self.entry_specialization.setPlaceholderText("e.g. Computer, Power, Communications")
+        layout.addWidget(self.entry_specialization)
+
+        # Save button
+        btn_save = QPushButton("Save Project")
+        btn_save.setFixedHeight(40)
+        btn_save.setStyleSheet(
+            "QPushButton { background-color: #2E7D32; color: white;"
+            "border-radius: 6px; font-weight: bold; }"
+            "QPushButton:hover { background-color: #388E3C; }"
+        )
+        btn_save.clicked.connect(self._save_data)
+        layout.addWidget(btn_save)
+
+    def _save_data(self):
+        title          = self.entry_title.text().strip()
+        description    = self.entry_description.text().strip()
+        faculty_member = self.entry_faculty.text().strip()
+        specialization = self.entry_specialization.text().strip()
 
         if self.project_to_edit:
-            self.entry_title.insert(0, self.project_to_edit.get('title', ''))
-            self.entry_description.insert(0, self.project_to_edit.get('description', ''))
-            self.entry_faculty.insert(0, self.project_to_edit.get('faculty_id', ''))
-
-    # Save data from form fields
-    def save_data(self):
-        title = self.entry_title.get()
-        description = self.entry_description.get()
-        faculty_member = self.entry_faculty.get()
-
-        if self.project_to_edit:
-            result = self.controller.update_project(self.project_to_edit.get('project_id'), title, description, faculty_member)
+            ok, msg = self.controller.update_project(
+                self.project_to_edit.get("project_id"),
+                title, description, faculty_member, specialization
+            )
         else:
-            result = self.controller.add_project(title, description, faculty_member)
+            ok, msg = self.controller.add_project(
+                title, description, faculty_member, specialization
+            )
 
-        if "Error" in result:
-            messagebox.showerror("Notification", result)
-        else:
-            messagebox.showinfo("Success", result)
+        if ok:
+            QMessageBox.information(self, "Success", msg)
             if self.refresh_callback:
                 self.refresh_callback()
-            self.controller.close()
-            self.root.destroy()
+            self.close()
+        else:
+            QMessageBox.warning(self, "Error", msg)
