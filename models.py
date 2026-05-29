@@ -67,11 +67,13 @@ class Team:
 class Faculty:
     """Represents a faculty member who can supervise projects."""
 
-    def __init__(self, faculty_id, name, department, specialization=None):
+    def __init__(self, faculty_id, name, department, specialization=None,max_supervisions=3,current_supervisions=0):
         self.faculty_id = faculty_id
         self.name = name
         self.department = department
         self.specialization = specialization
+        self.max_supervisions = max_supervisions
+        self.current_supervisions = current_supervisions
 
     def __repr__(self):
         return (
