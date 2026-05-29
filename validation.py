@@ -11,7 +11,7 @@ def check_team_size(team):
 # Ensures the members' specializations are suitable for the project.
 def check_specialization(team , project):
     for member in team.members:
-        if member.program not in project.specialization:
+        if member.program != project.specialization:
            return False, f"Student {member.student_id} program '{member.program}' is not allowed for this project."
     return True , " "
         
