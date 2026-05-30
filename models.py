@@ -15,40 +15,6 @@ class Student:
         )
 
 
-class Project:
-    """Represents a graduation project offered for registration."""
-
-    def __init__(
-        self,
-        title,
-        description,
-        specialization,
-        prerequisites=None,
-        max_students=3,
-        required_facilities=None,
-        supervisor=None,
-        status="open",
-        project_id=None,
-        allocated_students=0,
-    ):
-        self.project_id = project_id
-        self.title = title
-        self.description = description
-        self.specialization = specialization
-        self.prerequisites = prerequisites or []
-        self.max_students = max_students
-        self.allocated_students = allocated_students
-        self.required_facilities = required_facilities or []
-        self.supervisor = supervisor
-        self.status = status
-
-    def __repr__(self):
-        return (
-            f"Project(project_id={self.project_id!r}, title={self.title!r}, "
-            f"specialization={self.specialization!r}, status={self.status!r})"
-        )
-
-
 class Team:
     """Represents a student team applying for a graduation project."""
 
