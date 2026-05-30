@@ -1,4 +1,3 @@
-
 # Login window for the Graduation Project Registration System.
 # Uses AuthManager from auth.py to verify credentials.
 # Redirects to the correct dashboard based on the user's role.
@@ -14,7 +13,6 @@ from PyQt6.QtGui import QFont
 from database import DatabaseManager
 from auth import AuthManager
 
-# Colour palette (matches student_dashboard.py) 
 PRIMARY_COLOR   = "#1A3C6E"
 ACCENT_COLOR    = "#2E7D32"
 LIGHT_BG        = "#F4F6F8"
@@ -29,41 +27,30 @@ class LoginWindow(QWidget):
 
     def __init__(self):
         super().__init__()
-        # Initialise database and auth manager
         self.db   = DatabaseManager()
         self.auth = AuthManager(self.db)
 
         self.setWindowTitle("ECE Graduation Project System — Login")
         self.setFixedSize(420, 480)
         self.setStyleSheet(f"background-color: {LIGHT_BG};")
-
         self._build_ui()
-
-    # UI construction 
 
     def _build_ui(self):
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
-
-        # Header bar
         root.addWidget(self._build_header())
-
-        # Card in the centre
         card_wrapper = QVBoxLayout()
         card_wrapper.setContentsMargins(40, 30, 40, 30)
         card_wrapper.addWidget(self._build_card())
         root.addLayout(card_wrapper)
 
     def _build_header(self) -> QFrame:
-        """Blue top bar with system title."""
         header = QFrame()
         header.setFixedHeight(72)
         header.setStyleSheet(f"background-color: {PRIMARY_COLOR}; border: none;")
-
         layout = QHBoxLayout(header)
         layout.setContentsMargins(30, 0, 30, 0)
-
         title = QLabel("🎓  ECE Graduation Project Registration System")
         title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         title.setStyleSheet("color: white;")
@@ -71,7 +58,6 @@ class LoginWindow(QWidget):
         return header
 
     def _build_card(self) -> QFrame:
-        """White card containing the login form."""
         card = QFrame()
         card.setStyleSheet(
             f"""
@@ -82,12 +68,10 @@ class LoginWindow(QWidget):
             }}
             """
         )
-
         layout = QVBoxLayout(card)
         layout.setContentsMargins(30, 30, 30, 30)
         layout.setSpacing(16)
 
-        # Title
         title = QLabel("Sign In")
         title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {PRIMARY_COLOR}; border: none;")
@@ -102,22 +86,17 @@ class LoginWindow(QWidget):
 
         layout.addSpacing(8)
 
-        # Email field
         layout.addWidget(self._field_label("Email"))
         self.email_input = self._make_input("student@university.edu")
         layout.addWidget(self.email_input)
 
-        # Password field
         layout.addWidget(self._field_label("Password"))
         self.password_input = self._make_input("••••••••", password=True)
         layout.addWidget(self.password_input)
-
-        # Allow pressing Enter to log in
         self.password_input.returnPressed.connect(self._on_login)
 
         layout.addSpacing(8)
 
-        # Login button
         self.btn_login = QPushButton("Login")
         self.btn_login.setFixedHeight(44)
         self.btn_login.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
@@ -136,10 +115,7 @@ class LoginWindow(QWidget):
         )
         self.btn_login.clicked.connect(self._on_login)
         layout.addWidget(self.btn_login)
-
         return card
-
-    # Helper widgets 
 
     def _field_label(self, text: str) -> QLabel:
         lbl = QLabel(text)
@@ -171,42 +147,32 @@ class LoginWindow(QWidget):
         )
         return field
 
-    # Login logic 
-
     def _on_login(self):
-        """Called when the user presses Login or hits Enter."""
         email    = self.email_input.text().strip()
         password = self.password_input.text()
 
-        # Attempt authentication
         ok, result = self.auth.login(email, password)
 
         if not ok:
-            # Show error message
             QMessageBox.warning(self, "Login Failed", result)
             self.password_input.clear()
             return
 
-        # result is the role: "student" / "faculty" / "admin"
-        role = result
-        self._open_dashboard(role)
+        self._open_dashboard(result)
 
     def _open_dashboard(self, role: str):
-        """Open the correct dashboard and close the login window."""
+        """Open the correct dashboard based on user role."""
         if role == "student":
             self._open_student_dashboard()
         elif role == "faculty":
             self._open_faculty_dashboard()
-        
+        elif role == "admin":
+            QMessageBox.information(self, "Admin", "Logged in as Admin.")
 
     def _open_student_dashboard(self):
-        """Build the student dict and open StudentDashboard."""
         from student_dashboard import StudentDashboard
 
-        # Get the logged-in student's full record from the database
         email = self.email_input.text().strip()
-
-        # Build the dict that StudentDashboard expects
         row = self.db.cursor.execute(
             """
             SELECT s.student_id, s.name, s.gpa, s.program, u.email
@@ -234,7 +200,6 @@ class LoginWindow(QWidget):
         self.close()
 
     def _open_faculty_dashboard(self):
-        """Open FacultyDashboardWindow."""
         from faculty_dashboard import FacultyDashboardWindow
         self.dashboard = FacultyDashboardWindow(db=self.db)
         self.dashboard.show()
