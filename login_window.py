@@ -14,7 +14,7 @@ from PyQt6.QtGui import QFont
 from database import DatabaseManager
 from auth import AuthManager
 
-# ── Colour palette (matches student_dashboard.py) ──────────────────────────
+# Colour palette (matches student_dashboard.py) 
 PRIMARY_COLOR   = "#1A3C6E"
 ACCENT_COLOR    = "#2E7D32"
 LIGHT_BG        = "#F4F6F8"
@@ -39,7 +39,7 @@ class LoginWindow(QWidget):
 
         self._build_ui()
 
-    # ── UI construction ────────────────────────────────────────────────────
+    # UI construction 
 
     def _build_ui(self):
         root = QVBoxLayout(self)
@@ -139,7 +139,7 @@ class LoginWindow(QWidget):
 
         return card
 
-    # ── Helper widgets ─────────────────────────────────────────────────────
+    # Helper widgets 
 
     def _field_label(self, text: str) -> QLabel:
         lbl = QLabel(text)
@@ -171,7 +171,7 @@ class LoginWindow(QWidget):
         )
         return field
 
-    # ── Login logic ────────────────────────────────────────────────────────
+    # Login logic 
 
     def _on_login(self):
         """Called when the user presses Login or hits Enter."""
@@ -197,9 +197,7 @@ class LoginWindow(QWidget):
             self._open_student_dashboard()
         elif role == "faculty":
             self._open_faculty_dashboard()
-        elif role == "admin":
-            # Admin dashboard — placeholder until built
-            QMessageBox.information(self, "Admin", "Admin dashboard coming soon.")
+        
 
     def _open_student_dashboard(self):
         """Build the student dict and open StudentDashboard."""
