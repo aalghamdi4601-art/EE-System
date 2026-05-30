@@ -1,28 +1,17 @@
 # views/available_projects_view.py
 # Member 3 - Available Projects Browser
-#
-# Read-only view that lists all open graduation projects.
-# Students can search by keyword and filter by program.
-# Each project card expands to show its full details (prerequisites,
-# facilities, supervisor, slots remaining).
-#
-# Registration logic itself is NOT here — that belongs to Member 4.
 
 import sys
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QFrame, QLineEdit, QScrollArea, QSizePolicy,
     QComboBox
 )
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QFont
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QFont
 
 from controllers.team_controller import TeamController
 
-
-# ---------------------------------------------------------------------------
-# Shared palette
-# ---------------------------------------------------------------------------
 PRIMARY_COLOR    = "#1A3C6E"
 ACCENT_COLOR     = "#2E7D32"
 LIGHT_BG         = "#F4F6F8"
@@ -40,19 +29,14 @@ SLOTS_FULL_COLOR = "#C62828"
 PROGRAM_OPTIONS = ["All Programs", "Computer", "Communications", "Power", "Biomedical"]
 
 
-# ---------------------------------------------------------------------------
-# Tiny reusable widget helpers
-# ---------------------------------------------------------------------------
-
 def make_tag(text: str) -> QLabel:
-    """A small pill-shaped label."""
     lbl = QLabel(text)
     lbl.setFont(QFont("Segoe UI", 8))
     lbl.setStyleSheet(
         f"background-color: {TAG_BG}; color: {TAG_TEXT}; "
         f"border-radius: 10px; padding: 2px 8px;"
     )
-    lbl.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+    lbl.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
     return lbl
 
 
@@ -67,20 +51,11 @@ def make_label(text: str, size: int = 10, bold: bool = False,
     return lbl
 
 
-# ---------------------------------------------------------------------------
-# Single Project Card (collapsible)
-# ---------------------------------------------------------------------------
-
 class ProjectCard(QFrame):
-    """
-    Collapsible card showing one project.  Click the header to expand
-    and see prerequisites, facilities and slot details.
-    """
-
     def __init__(self, project: dict, parent=None):
         super().__init__(parent)
-        self.project   = project
-        self.expanded  = False
+        self.project  = project
+        self.expanded = False
 
         self.setStyleSheet(
             f"""
@@ -89,32 +64,23 @@ class ProjectCard(QFrame):
                 border-radius: 10px;
                 border: 1px solid {BORDER_COLOR};
             }}
-            QFrame:hover {{
-                border: 1px solid #AABDE0;
-            }}
+            QFrame:hover {{ border: 1px solid #AABDE0; }}
             """
         )
-        self.setCursor(Qt.PointingHandCursor)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
-
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self._build_ui()
-
-    # ------------------------------------------------------------------
-    # Build
-    # ------------------------------------------------------------------
 
     def _build_ui(self):
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(20, 14, 20, 14)
         self.main_layout.setSpacing(0)
 
-        # ----- Always-visible header row -----
         header_row = QHBoxLayout()
         header_row.setSpacing(10)
 
         left_col = QVBoxLayout()
         left_col.setSpacing(4)
-
         left_col.addWidget(
             make_label(self.project.get("title", "Untitled"),
                        size=12, bold=True, color=PRIMARY_COLOR)
@@ -127,40 +93,36 @@ class ProjectCard(QFrame):
             tags_row.addWidget(make_tag(f"👤 {self.project['supervisor']}"))
         tags_row.addStretch()
         left_col.addLayout(tags_row)
-
         header_row.addLayout(left_col, stretch=4)
 
-        # Right side: slots badge + arrow
         right_col = QVBoxLayout()
-        right_col.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        right_col.setAlignment(
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        )
         right_col.setSpacing(4)
-
-        right_col.addWidget(self._slots_label(), alignment=Qt.AlignRight)
+        right_col.addWidget(self._slots_label(),
+                            alignment=Qt.AlignmentFlag.AlignRight)
         self.arrow_lbl = make_label("▼", size=9, color=TEXT_SECONDARY)
-        right_col.addWidget(self.arrow_lbl, alignment=Qt.AlignRight)
-
+        right_col.addWidget(self.arrow_lbl,
+                            alignment=Qt.AlignmentFlag.AlignRight)
         header_row.addLayout(right_col, stretch=1)
         self.main_layout.addLayout(header_row)
 
-        # ----- Expandable detail section -----
         self.detail_widget = QWidget()
         d = QVBoxLayout(self.detail_widget)
         d.setContentsMargins(0, 12, 0, 4)
         d.setSpacing(10)
 
-        # Divider line
         line = QFrame()
-        line.setFrameShape(QFrame.HLine)
+        line.setFrameShape(QFrame.Shape.HLine)
         line.setStyleSheet(f"color: {BORDER_COLOR};")
         d.addWidget(line)
 
-        # Description
         if self.project.get("description"):
             d.addWidget(make_label("Description", 9, bold=True, color=TEXT_SECONDARY))
             d.addWidget(make_label(self.project["description"], 10,
-                                    color=TEXT_PRIMARY, wrap=True))
+                                   color=TEXT_PRIMARY, wrap=True))
 
-        # Prerequisites — these come from the controller as a list
         d.addWidget(make_label("Prerequisites", 9, bold=True, color=TEXT_SECONDARY))
         prereqs = self.project.get("prerequisites") or []
         if prereqs:
@@ -173,14 +135,13 @@ class ProjectCard(QFrame):
         else:
             d.addWidget(make_label("None required", 10, color=TEXT_SECONDARY))
 
-        # Required facilities (already joined into one string by the controller)
         facilities_str = self.project.get("required_facilities", "") or ""
         if facilities_str.strip():
-            d.addWidget(make_label("Required Facilities", 9, bold=True, color=TEXT_SECONDARY))
+            d.addWidget(make_label("Required Facilities", 9,
+                                   bold=True, color=TEXT_SECONDARY))
             d.addWidget(make_label(f"🔬  {facilities_str}", 10,
-                                    color=TEXT_PRIMARY, wrap=True))
+                                   color=TEXT_PRIMARY, wrap=True))
 
-        # Availability
         max_s   = self.project.get("max_students", 3) or 3
         alloc_s = self.project.get("allocated_students", 0) or 0
         left    = max_s - alloc_s
@@ -191,7 +152,6 @@ class ProjectCard(QFrame):
             color=SLOTS_OK_COLOR if left > 0 else SLOTS_FULL_COLOR
         ))
 
-        # Project ID (for Member 4's registration step later)
         d.addWidget(make_label(
             f"Project ID: {self.project.get('project_id', '—')}",
             9, color=TEXT_SECONDARY
@@ -199,10 +159,6 @@ class ProjectCard(QFrame):
 
         self.detail_widget.setVisible(False)
         self.main_layout.addWidget(self.detail_widget)
-
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
 
     def _slots_label(self) -> QLabel:
         max_s   = self.project.get("max_students", 3) or 3
@@ -217,16 +173,12 @@ class ProjectCard(QFrame):
             color, text = SLOTS_OK_COLOR, f"{left} slots open"
 
         lbl = QLabel(text)
-        lbl.setFont(QFont("Segoe UI", 8, QFont.Bold))
+        lbl.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
         lbl.setStyleSheet(
             f"color: {color}; background-color: transparent; "
             f"border: 1px solid {color}; border-radius: 8px; padding: 2px 8px;"
         )
         return lbl
-
-    # ------------------------------------------------------------------
-    # Expand/collapse on click
-    # ------------------------------------------------------------------
 
     def mousePressEvent(self, event):
         self.expanded = not self.expanded
@@ -235,19 +187,7 @@ class ProjectCard(QFrame):
         self.adjustSize()
 
 
-# ---------------------------------------------------------------------------
-# Main view
-# ---------------------------------------------------------------------------
-
 class AvailableProjectsView(QWidget):
-    """
-    Window listing all open graduation projects.
-
-    Parameters:
-        specialization : str or None — pre-filter to this program
-        parent         : QWidget or None
-    """
-
     def __init__(self, specialization: str = None, parent=None):
         super().__init__(parent)
         self.controller         = TeamController()
@@ -260,21 +200,11 @@ class AvailableProjectsView(QWidget):
         self.setStyleSheet(f"background-color: {LIGHT_BG};")
 
         self._build_ui()
-
-        # Defer initial load so the window is fully constructed first
         QTimer.singleShot(0, self._load_projects)
-
-    # ------------------------------------------------------------------
-    # Cleanup
-    # ------------------------------------------------------------------
 
     def closeEvent(self, event):
         self.controller.close()
         super().closeEvent(event)
-
-    # ------------------------------------------------------------------
-    # UI Construction
-    # ------------------------------------------------------------------
 
     def _build_ui(self):
         root = QVBoxLayout(self)
@@ -288,10 +218,9 @@ class AvailableProjectsView(QWidget):
         self.results_label.setContentsMargins(28, 6, 28, 2)
         root.addWidget(self.results_label)
 
-        # Scrollable card area
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setFrameShape(QFrame.NoFrame)
+        self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
         self.scroll_area.setStyleSheet(
             "QScrollArea { border: none; background: transparent; }"
         )
@@ -301,7 +230,7 @@ class AvailableProjectsView(QWidget):
         self.list_layout = QVBoxLayout(self.list_container)
         self.list_layout.setContentsMargins(24, 8, 24, 24)
         self.list_layout.setSpacing(12)
-        self.list_layout.addStretch()  # keep cards top-aligned
+        self.list_layout.addStretch()
 
         self.scroll_area.setWidget(self.list_container)
         root.addWidget(self.scroll_area)
@@ -315,19 +244,18 @@ class AvailableProjectsView(QWidget):
         layout.setContentsMargins(28, 0, 28, 0)
 
         title = QLabel("📋  Available Graduation Projects")
-        title.setFont(QFont("Segoe UI", 13, QFont.Bold))
+        title.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
         title.setStyleSheet("color: white;")
 
         refresh_btn = QPushButton("↻  Refresh")
         refresh_btn.setFixedSize(90, 30)
         refresh_btn.setFont(QFont("Segoe UI", 9))
-        refresh_btn.setCursor(Qt.PointingHandCursor)
+        refresh_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         refresh_btn.setStyleSheet(
             """
             QPushButton {
                 background-color: rgba(255,255,255,0.15);
-                color: white;
-                border-radius: 6px;
+                color: white; border-radius: 6px;
                 border: 1px solid rgba(255,255,255,0.4);
             }
             QPushButton:hover { background-color: rgba(255,255,255,0.25); }
@@ -349,7 +277,6 @@ class AvailableProjectsView(QWidget):
         layout.setContentsMargins(24, 12, 24, 12)
         layout.setSpacing(14)
 
-        # Search box
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText(
             "🔍  Search by title, supervisor, or facility..."
@@ -360,13 +287,14 @@ class AvailableProjectsView(QWidget):
             f"border: 1px solid {BORDER_COLOR}; border-radius: 8px; "
             f"padding: 0 10px; background: {LIGHT_BG};"
         )
-        # Debounce keystrokes so we don't filter on every single char
+
         self._search_timer = QTimer()
         self._search_timer.setSingleShot(True)
         self._search_timer.timeout.connect(self._apply_filters)
-        self.search_input.textChanged.connect(lambda: self._search_timer.start(300))
+        self.search_input.textChanged.connect(
+            lambda: self._search_timer.start(300)
+        )
 
-        # Program filter
         self.filter_combo = QComboBox()
         self.filter_combo.addItems(PROGRAM_OPTIONS)
         self.filter_combo.setFixedHeight(36)
@@ -375,11 +303,8 @@ class AvailableProjectsView(QWidget):
         self.filter_combo.setStyleSheet(
             f"""
             QComboBox {{
-                border: 1px solid {BORDER_COLOR};
-                border-radius: 8px;
-                padding: 0 10px;
-                background: {LIGHT_BG};
-                color: {TEXT_PRIMARY};
+                border: 1px solid {BORDER_COLOR}; border-radius: 8px;
+                padding: 0 10px; background: {LIGHT_BG}; color: {TEXT_PRIMARY};
             }}
             QComboBox::drop-down {{ border: none; }}
             QComboBox QAbstractItemView {{
@@ -397,21 +322,10 @@ class AvailableProjectsView(QWidget):
         layout.addWidget(self.filter_combo, stretch=1)
         return container
 
-    # ------------------------------------------------------------------
-    # Data loading
-    # ------------------------------------------------------------------
-
     def _load_projects(self):
-        """Fetch all open projects via the controller and re-render."""
         self.results_label.setText("Loading...")
-        # The controller already attaches 'prerequisites' (list) and
-        # 'required_facilities' (string) to each dict.
         self.all_projects = self.controller.get_available_projects()
         self._apply_filters()
-
-    # ------------------------------------------------------------------
-    # Filtering & rendering
-    # ------------------------------------------------------------------
 
     def _apply_filters(self):
         keyword = self.search_input.text().strip().lower()
@@ -419,13 +333,10 @@ class AvailableProjectsView(QWidget):
 
         filtered = []
         for proj in self.all_projects:
-            # Program filter
             if program != "All Programs":
                 spec = proj.get("specialization", "") or ""
                 if spec != program and spec != "All":
                     continue
-
-            # Keyword search across multiple fields
             if keyword:
                 searchable = " ".join([
                     str(proj.get("title", "")),
@@ -435,14 +346,12 @@ class AvailableProjectsView(QWidget):
                 ]).lower()
                 if keyword not in searchable:
                     continue
-
             filtered.append(proj)
 
         self.displayed_projects = filtered
         self._render_project_list()
 
     def _render_project_list(self):
-        # Remove old cards (keep the trailing stretch at the bottom)
         while self.list_layout.count() > 1:
             item = self.list_layout.takeAt(0)
             if item.widget():
@@ -454,16 +363,14 @@ class AvailableProjectsView(QWidget):
                 "No projects match your search criteria.",
                 11, color=TEXT_SECONDARY
             )
-            empty_lbl.setAlignment(Qt.AlignCenter)
+            empty_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             empty_lbl.setContentsMargins(0, 40, 0, 0)
             self.list_layout.insertWidget(0, empty_lbl)
             self.results_label.setText("No results found.")
             return
 
         chosen_program = self.filter_combo.currentText()
-        suffix = ""
-        if chosen_program != "All Programs":
-            suffix = f"  —  filtered by '{chosen_program}'"
+        suffix = f"  —  filtered by '{chosen_program}'" if chosen_program != "All Programs" else ""
         self.results_label.setText(
             f"Showing {count} project{'s' if count != 1 else ''}" + suffix
         )
@@ -473,11 +380,8 @@ class AvailableProjectsView(QWidget):
             self.list_layout.insertWidget(self.list_layout.count() - 1, card)
 
 
-# ---------------------------------------------------------------------------
-# Standalone test
-# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = AvailableProjectsView(specialization="Computer")
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
