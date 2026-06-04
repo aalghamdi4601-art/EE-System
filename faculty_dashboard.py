@@ -37,11 +37,11 @@ class FacultyDashboardWindow(QWidget):
         layout.addWidget(btn_manage)
 
     def open_add_project_form(self):
-        from views.project_form import ProjectFormWindow
+        from project_form import ProjectFormWindow
         self.form = ProjectFormWindow(self.db)
         self.form.show()
 
     def open_project_list(self):
-        from views.project_list_view import ProjectListViewWindow
+        from project_list_view import ProjectListViewWindow
         self.list_view = ProjectListViewWindow(self.db)
         self.list_view.show()

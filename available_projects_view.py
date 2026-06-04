@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont
 
-from controllers.team_controller import TeamController
+from team_controller import TeamController
 
 PRIMARY_COLOR    = "#1A3C6E"
 ACCENT_COLOR     = "#2E7D32"

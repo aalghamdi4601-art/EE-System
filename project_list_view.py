@@ -7,8 +7,8 @@ from PyQt6.QtWidgets import (
     QHeaderView, QMessageBox
 )
 from PyQt6.QtCore import Qt
-from controllers.project_controller import ProjectController
-from views.project_form import ProjectFormWindow
+from project_controller import ProjectController
+from project_form import ProjectFormWindow
 
 
 class ProjectListViewWindow(QWidget):

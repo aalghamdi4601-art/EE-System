@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QPushButton, QMessageBox
 )
 from PyQt6.QtCore import Qt
-from controllers.project_controller import ProjectController
+from project_controller import ProjectController
 
 
 class ProjectFormWindow(QWidget):

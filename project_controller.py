@@ -2,7 +2,7 @@
 # Project Controller
 # ==========================================
 from database import DatabaseManager
-from models.project import Project
+from project import Project
 
 
 class ProjectController:

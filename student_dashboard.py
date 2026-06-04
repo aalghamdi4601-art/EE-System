@@ -18,9 +18,9 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
-from controllers.team_controller import TeamController
-from views.team_form import TeamFormView
-from views.available_projects_view import AvailableProjectsView
+from team_controller import TeamController
+from team_form import TeamFormView
+from available_projects_view import AvailableProjectsView
 
 
 # ---------------------------------------------------------------------------
