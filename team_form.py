@@ -31,6 +31,7 @@ class TeamFormView(QDialog):
 
         self.setWindowTitle("Create a New Team")
         self.setMinimumWidth(480)
+        self.setMinimumHeight(700)
         self.setModal(True)
         self.setStyleSheet(f"background-color: {LIGHT_BG};")
         self._build_ui()
