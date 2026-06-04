@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+graduation_system.db
+add_test_user.py
