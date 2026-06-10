@@ -42,5 +42,46 @@ db.add_student("S006", "Hamad Al-Dosari", 3.4, "Biomedical",
     ["EE301", "EE370", "EE471", "EE250"],
     user_email="s006@uni.edu")
 
+# Projects
+p1 = db.add_project(
+    title="Smart Home Automation",
+    description="Design a smart home system using IoT and embedded controllers",
+    specialization="Computer",
+    prerequisites=["EE301", "EE250"],
+    max_students=3,
+    facilities=["Computer Lab"],
+    supervisor="F001"
+)
+
+p2 = db.add_project(
+    title="5G Network Simulation",
+    description="Simulate and analyze 5G network performance",
+    specialization="Communications",
+    prerequisites=["EE301", "EE321"],
+    max_students=3,
+    facilities=["Communications Lab"],
+    supervisor="F001"
+)
+
+p3 = db.add_project(
+    title="Solar Energy Management",
+    description="Design an energy management system for solar power",
+    specialization="Power",
+    prerequisites=["EE301", "EE351"],
+    max_students=3,
+    facilities=["Power Lab"],
+    supervisor="F001"
+)
+
+p4 = db.add_project(
+    title="ECG Signal Processing",
+    description="Process and analyze ECG signals for heart monitoring",
+    specialization="Biomedical",
+    prerequisites=["EE301", "EE370"],
+    max_students=3,
+    facilities=["Biomedical Lab"],
+    supervisor="F001"
+)
+
 print("Done!")
 db.close()
