@@ -5,12 +5,14 @@ import sys
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QFrame, QLineEdit, QScrollArea, QSizePolicy,
-    QComboBox
+    QComboBox, QMessageBox
 )
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont
 
 from team_controller import TeamController
+from validation import validate_registration
+from models import Student, Team, Project, Faculty
 
 PRIMARY_COLOR    = "#1A3C6E"
 ACCENT_COLOR     = "#2E7D32"
@@ -52,10 +54,13 @@ def make_label(text: str, size: int = 10, bold: bool = False,
 
 
 class ProjectCard(QFrame):
-    def __init__(self, project: dict, parent=None):
+    def __init__(self, project: dict, current_student: dict = None,
+                 team_controller: TeamController = None, parent=None):
         super().__init__(parent)
-        self.project  = project
-        self.expanded = False
+        self.project         = project
+        self.current_student = current_student
+        self.team_controller = team_controller
+        self.expanded        = False
 
         self.setStyleSheet(
             f"""
@@ -157,6 +162,25 @@ class ProjectCard(QFrame):
             9, color=TEXT_SECONDARY
         ))
 
+        # Register button
+        if self.current_student:
+            btn_register = QPushButton("📝  Register for this Project")
+            btn_register.setFixedHeight(38)
+            btn_register.setStyleSheet(
+                f"""
+                QPushButton {{
+                    background-color: {PRIMARY_COLOR};
+                    color: white;
+                    border-radius: 7px;
+                    font-weight: bold;
+                    border: none;
+                }}
+                QPushButton:hover {{ background-color: #25518C; }}
+                """
+            )
+            btn_register.clicked.connect(self._register)
+            d.addWidget(btn_register)
+
         self.detail_widget.setVisible(False)
         self.main_layout.addWidget(self.detail_widget)
 
@@ -180,6 +204,60 @@ class ProjectCard(QFrame):
         )
         return lbl
 
+    def _register(self):
+        """Validate and register the team for this project."""
+        if not self.current_student or not self.team_controller:
+            return
+
+        student_id = self.current_student.get("student_id")
+        team_info  = self.team_controller.get_team_of_student(student_id)
+
+        if not team_info:
+            QMessageBox.warning(self, "No Team",
+                                "You must be in a team before registering.")
+            return
+
+        # Build objects for validation
+        team_id    = team_info["team_id"]
+        members_data = self.team_controller.get_team_members(team_id)
+
+        members = [
+            Student(
+                m["student_id"], m["name"], m["gpa"], m["program"],
+                [r["course_code"] for r in
+                 self.team_controller.db.get_student_courses(m["student_id"])]
+            )
+            for m in members_data
+        ]
+
+        team = Team(team_info["team_name"], members=members, team_id=team_id)
+
+        project = Project(
+            title=self.project.get("title"),
+            description=self.project.get("description"),
+            specialization=self.project.get("specialization"),
+            prerequisites=self.project.get("prerequisites") or [],
+            max_students=self.project.get("max_students", 3),
+            allocated_students=self.project.get("allocated_students", 0),
+            project_id=self.project.get("project_id"),
+        )
+
+        faculty = Faculty("F001", "Dr. Khalid", "ECE",
+                          max_supervisions=3, current_supervisions=0)
+
+        db = self.team_controller.db
+        ok, msg = validate_registration(
+            team, project, faculty, db,
+            self.project.get("project_id"), team_id
+        )
+
+        if ok:
+            db.register_team(team_id, self.project.get("project_id"))
+            QMessageBox.information(self, "Success",
+                                    f"✅ Registered for '{project.title}'!")
+        else:
+            QMessageBox.warning(self, "Registration Failed", msg)
+
     def mousePressEvent(self, event):
         self.expanded = not self.expanded
         self.detail_widget.setVisible(self.expanded)
@@ -188,10 +266,12 @@ class ProjectCard(QFrame):
 
 
 class AvailableProjectsView(QWidget):
-    def __init__(self, specialization: str = None, parent=None):
+    def __init__(self, specialization: str = None,
+                 current_student: dict = None, parent=None):
         super().__init__(parent)
         self.controller         = TeamController()
         self.initial_filter     = specialization
+        self.current_student    = current_student
         self.all_projects       = []
         self.displayed_projects = []
 
@@ -376,7 +456,11 @@ class AvailableProjectsView(QWidget):
         )
 
         for proj in self.displayed_projects:
-            card = ProjectCard(project=proj)
+            card = ProjectCard(
+                project=proj,
+                current_student=self.current_student,
+                team_controller=self.controller
+            )
             self.list_layout.insertWidget(self.list_layout.count() - 1, card)
 
 
