@@ -1,6 +1,11 @@
 # add_test_user.py
+import os
 from database import DatabaseManager
 from auth import hash_password
+
+# Delete old database before seeding
+if os.path.exists("graduation_system.db"):
+    os.remove("graduation_system.db")
 
 db = DatabaseManager()
 
@@ -43,7 +48,7 @@ db.add_student("S006", "Hamad Al-Dosari", 3.4, "Biomedical",
     user_email="s006@uni.edu")
 
 # Projects
-p1 = db.add_project(
+db.add_project(
     title="Smart Home Automation",
     description="Design a smart home system using IoT and embedded controllers",
     specialization="Computer",
@@ -53,7 +58,7 @@ p1 = db.add_project(
     supervisor="F001"
 )
 
-p2 = db.add_project(
+db.add_project(
     title="5G Network Simulation",
     description="Simulate and analyze 5G network performance",
     specialization="Communications",
@@ -63,7 +68,7 @@ p2 = db.add_project(
     supervisor="F001"
 )
 
-p3 = db.add_project(
+db.add_project(
     title="Solar Energy Management",
     description="Design an energy management system for solar power",
     specialization="Power",
@@ -73,7 +78,7 @@ p3 = db.add_project(
     supervisor="F001"
 )
 
-p4 = db.add_project(
+db.add_project(
     title="ECG Signal Processing",
     description="Process and analyze ECG signals for heart monitoring",
     specialization="Biomedical",
