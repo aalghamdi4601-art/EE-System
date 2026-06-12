@@ -265,9 +265,14 @@ class StudentDashboard(QWidget):
     def _on_team_created(self):
         self._load_team_status()
 
-    def _open_available_projects(self):
-        specialization = self.current_student.get("program")
-        self.projects_window = AvailableProjectsView(specialization=specialization)
+   def _open_available_projects(self):
+    specialization = self.current_student.get("program")
+    self.projects_window = AvailableProjectsView(
+        specialization=specialization,
+        current_student=self.current_student
+    )
+       
+    self.projects_window.show()
         self.projects_window.show()
 
     def _divider(self) -> QFrame:
