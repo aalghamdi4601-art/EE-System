@@ -1,13 +1,5 @@
 # views/student_dashboard.py
 # Member 3 - Student Dashboard
-#
-# Main window shown to a logged-in student after Member 4's login system
-# hands them off.  Shows:
-#   * Their academic profile.
-#   * Their current team status (or a prompt to create one).
-#   * Buttons to create a team or browse available projects.
-#
-# Member 4 passes in `current_student` as a dict from the auth layer.
 
 import sys
 from PyQt6.QtWidgets import (
@@ -22,10 +14,6 @@ from team_controller import TeamController
 from team_form import TeamFormView
 from available_projects_view import AvailableProjectsView
 
-
-# ---------------------------------------------------------------------------
-# Shared colour palette
-# ---------------------------------------------------------------------------
 PRIMARY_COLOR   = "#1A3C6E"
 ACCENT_COLOR    = "#2E7D32"
 LIGHT_BG        = "#F4F6F8"
@@ -265,14 +253,12 @@ class StudentDashboard(QWidget):
     def _on_team_created(self):
         self._load_team_status()
 
-   def _open_available_projects(self):
-    specialization = self.current_student.get("program")
-    self.projects_window = AvailableProjectsView(
-        specialization=specialization,
-        current_student=self.current_student
-    )
-       
-    self.projects_window.show()
+    def _open_available_projects(self):
+        specialization = self.current_student.get("program")
+        self.projects_window = AvailableProjectsView(
+            specialization=specialization,
+            current_student=self.current_student
+        )
         self.projects_window.show()
 
     def _divider(self) -> QFrame:
