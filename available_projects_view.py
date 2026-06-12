@@ -12,7 +12,8 @@ from PyQt6.QtGui import QFont
 
 from team_controller import TeamController
 from validation import validate_registration
-from models import Student, Team, Project, Faculty
+from models import Student, Team, Faculty
+from project import Project
 
 PRIMARY_COLOR    = "#1A3C6E"
 ACCENT_COLOR     = "#2E7D32"
