@@ -234,14 +234,15 @@ class ProjectCard(QFrame):
         team = Team(team_info["team_name"], members=members, team_id=team_id)
 
         project = Project(
-            title=self.project.get("title"),
-            description=self.project.get("description"),
-            specialization=self.project.get("specialization"),
-            prerequisites=self.project.get("prerequisites") or [],
-            max_students=self.project.get("max_students", 3),
-            allocated_students=self.project.get("allocated_students", 0),
-            project_id=self.project.get("project_id"),
-        )
+           project_id=self.project.get("project_id"),
+           title=self.project.get("title"),
+           description=self.project.get("description"),
+           faculty_member=self.project.get("supervisor", "F001"),
+           specialization=self.project.get("specialization"),
+           prerequisites=self.project.get("prerequisites") or [],
+           max_students=self.project.get("max_students", 3),
+           allocated_students=self.project.get("allocated_students", 0),
+)
 
         faculty = Faculty("F001", "Dr. Khalid", "ECE",
                           max_supervisions=3, current_supervisions=0)
